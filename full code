@@ -1,0 +1,418 @@
+import React, { useState } from 'react';
+
+// Define custom sage green color for Tailwind CSS
+const tailwindConfig = {
+  theme: {
+    extend: {
+      colors: {
+        'sage-green': '#8A9A5B', // A common shade of sage green
+        'light-sage': '#C8D8B6',
+        'dark-sage': '#6B7A4C',
+        'off-white': '#F8F8F8',
+      },
+      fontFamily: {
+        inter: ['Inter', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+};
+
+// Inject Tailwind CSS config
+// This is typically handled by a build process (e.g., PostCSS with Tailwind)
+// but for a self-contained Canvas environment, direct injection might be used.
+if (typeof window !== 'undefined') {
+  window.tailwind = { config: tailwindConfig };
+}
+
+// SVG for a subtle leaf icon (can be used for decorative purposes)
+const LeafIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+  >
+    <path
+      fillRule="evenodd"
+      d="M7.5 18.75a.75.75 0 0 0 0 1.5h.75v3c0 .414.336.75.75.75h.75a.75.75 0 0 0 .75-.75v-3h.75a.75.75 0 0 0 0-1.5h-.75V6.75a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25v12H3a.75.75 0 0 0 0 1.5h.75v3c0 .414.336.75.75.75h.75a.75.75 0 0 0 .75-.75v-3h.75a.75.75 0 0 0 0-1.5h-.75V6.75A.75.75 0 0 1 6 6h1.5a.75.75 0 0 1 .75.75v12h-.75ZM16.5 6.75a.75.75 0 0 0 0 1.5h.75v3c0 .414.336.75.75.75h.75a.75.75 0 0 0 .75-.75v-3h.75a.75.75 0 0 0 0-1.5h-.75V6.75A2.25 2.25 0 0 0 18 4.5h-1.5a2.25 2.25 0 0 0-2.25 2.25v12H12a.75.75 0 0 0 0 1.5h.75v3c0 .414.336.75.75.75h.75a.75.75 0 0 0 .75-.75v-3h.75a.75.75 0 0 0 0-1.5h-.75V6.75A.75.75 0 0 1 18 6h-1.5a.75.75 0 0 1-.75.75v12h-.75Z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
+
+// Home Page Component
+const HomePage = () => (
+  <div className="flex flex-col items-center justify-center min-h-[calc(100vh-160px)] px-4 py-8 text-center bg-off-white">
+    {/* Motto */}
+    <h1 className="text-5xl md:text-6xl font-bold text-sage-green mb-6 leading-tight font-inter">
+      "We help the old people to get new purpose in life."
+    </h1>
+    {/* Description */}
+    <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mb-8 font-inter">
+      At Radhey Shanti Foundation, a passionate group of young individuals is dedicated to transforming the lives of older adults, helping them discover new meaning and joy.
+    </p>
+    {/* Call to Action Button */}
+    <button className="bg-dark-sage hover:bg-sage-green text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 font-inter">
+      Learn More About Our Mission
+    </button>
+  </div>
+);
+
+// About Us Page Component
+const AboutUsPage = () => (
+  <div className="min-h-[calc(100vh-160px)] px-6 py-12 bg-off-white md:px-12 lg:px-24">
+    <h2 className="text-4xl font-bold text-sage-green mb-8 text-center font-inter">Our Story & Vision</h2>
+    <div className="max-w-4xl mx-auto text-gray-800 leading-relaxed font-inter">
+      <p className="mb-6 text-lg">
+        The Radhey Shanti Foundation was born from a simple yet profound realization: that the wisdom and experience of our elderly often go untapped, leading to feelings of isolation and a loss of purpose. A dynamic team of young, energetic individuals came together with a shared vision to change this narrative. We believe that age is not a barrier to growth, learning, or contributing to society.
+      </p>
+      <p className="mb-6 text-lg">
+        Our core mission is to empower older individuals to rediscover their passions, learn new skills, and engage actively with their communities. We aim to create an environment where they feel valued, heard, and excited about the possibilities that lie ahead. This isn't just about providing care; it's about fostering a vibrant ecosystem where life's later chapters are filled with renewed purpose and happiness.
+      </p>
+      <p className="mb-6 text-lg">
+        Our young volunteers are the heart of this movement. With fresh perspectives, boundless enthusiasm, and a deep respect for our elders, they dedicate their time and energy to designing and implementing programs that truly make a difference. From digital literacy workshops to creative arts sessions, and from intergenerational mentorship programs to community outreach, every initiative is crafted with love and a commitment to positive impact.
+      </p>
+      <p className="text-lg">
+        We are driven by the belief that by enriching the lives of the elderly, we enrich society as a whole. The joy and fulfillment we witness in the eyes of those we serve are our greatest rewards, fueling our determination to expand our reach and deepen our impact.
+      </p>
+    </div>
+  </div>
+);
+
+// Work Page Component
+const WorkPage = () => {
+  const [interest, setInterest] = useState('');
+  const [activityIdeas, setActivityIdeas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Function to generate activity ideas using the Gemini API
+  const generateActivityIdeas = async () => {
+    setLoading(true);
+    setError('');
+    setActivityIdeas([]); // Clear previous ideas
+
+    try {
+      const prompt = `Generate 5 creative and engaging activity ideas for elderly individuals based on the interest: "${interest}". The ideas should promote well-being, engagement, and a sense of purpose. Provide the ideas as a JSON array of strings.`;
+      let chatHistory = [];
+      chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+      const payload = {
+        contents: chatHistory,
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "ARRAY",
+            items: { "type": "STRING" }
+          }
+        }
+      };
+      const apiKey = ""; // Canvas will provide this at runtime
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.candidates && result.candidates.length > 0 &&
+          result.candidates[0].content && result.candidates[0].content.parts &&
+          result.candidates[0].content.parts.length > 0) {
+        const jsonText = result.candidates[0].content.parts[0].text;
+        const parsedIdeas = JSON.parse(jsonText);
+        setActivityIdeas(parsedIdeas);
+      } else {
+        setError('Failed to generate ideas. Please try again.');
+      }
+    } catch (err) {
+      console.error("Error generating activity ideas:", err);
+      setError('An error occurred while generating ideas. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[calc(100vh-160px)] px-6 py-12 bg-off-white md:px-12 lg:px-24">
+      <h2 className="text-4xl font-bold text-sage-green mb-8 text-center font-inter">How We Make a Difference</h2>
+      <div className="max-w-4xl mx-auto text-gray-800 leading-relaxed font-inter">
+        {/* Our Approach Section */}
+        <section className="mb-10">
+          <h3 className="text-3xl font-semibold text-dark-sage mb-4">Our Approach</h3>
+          <p className="mb-4 text-lg">
+            Our methodology is centered around personalized engagement and community building. We don't believe in a one-size-fits-all solution. Instead, we work closely with each individual to understand their interests, skills, and aspirations. Our programs are diverse, ranging from skill-building workshops (like basic computer literacy, crafting, or gardening) to social gatherings that promote camaraderie and reduce loneliness. We also facilitate intergenerational dialogues, allowing the elderly to share their invaluable life experiences with the younger generation, fostering mutual respect and understanding.
+          </p>
+        </section>
+
+        {/* Donations & Support Section */}
+        <section className="mb-10">
+          <h3 className="text-3xl font-semibold text-dark-sage mb-4">Donations & Support</h3>
+          <p className="mb-4 text-lg">
+            The impactful work we do at Radhey Shanti Foundation is made possible through the generous support of individuals and organizations. Every donation, no matter how small, directly contributes to funding our programs, acquiring necessary resources, and expanding our reach to more elderly individuals in need. Your contribution helps us provide a safe, engaging, and purposeful environment for them. We are committed to transparency and ensure that every rupee is utilized efficiently to maximize its positive impact.
+          </p>
+          <button className="bg-sage-green hover:bg-dark-sage text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 font-inter">
+            Support Our Cause
+          </button>
+        </section>
+
+        {/* Innovation & Young Energy Section */}
+        <section className="mb-10">
+          <h3 className="text-3xl font-semibold text-dark-sage mb-4">Innovation & Young Energy</h3>
+          <p className="mb-4 text-lg">
+            What sets us apart is the relentless innovation and vibrant energy brought by our young team. We are constantly exploring new and creative ways to engage the elderly, leveraging modern tools and fresh ideas. This includes developing new digital platforms for connectivity, introducing therapeutic activities, and collaborating with local businesses and educational institutions to create unique opportunities. Our youthful enthusiasm ensures that our programs are not just effective, but also dynamic, exciting, and truly reflective of the evolving needs of the elderly in today's world. We believe in pushing boundaries to create truly impactful and joyful experiences.
+          </p>
+        </section>
+
+        {/* ✨ Gemini API Integration: Activity Idea Generator ✨ */}
+        <section className="bg-light-sage p-8 rounded-lg shadow-md mb-10">
+          <h3 className="text-3xl font-semibold text-dark-sage mb-6 text-center font-inter">
+            ✨ Generate Activity Ideas for Seniors ✨
+          </h3>
+          <p className="mb-4 text-lg text-gray-700 text-center">
+            Enter an interest, and we'll suggest engaging activities for elderly individuals!
+          </p>
+          <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+            <input
+              type="text"
+              className="shadow appearance-none border rounded w-full md:w-2/3 py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-inter"
+              placeholder="e.g., Gardening, Storytelling, Art"
+              value={interest}
+              onChange={(e) => setInterest(e.target.value)}
+            />
+            <button
+              onClick={generateActivityIdeas}
+              className="bg-dark-sage hover:bg-sage-green text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 font-inter w-full md:w-auto"
+              disabled={loading}
+            >
+              {loading ? 'Generating...' : 'Generate Ideas'}
+            </button>
+          </div>
+
+          {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
+
+          {activityIdeas.length > 0 && (
+            <div className="mt-8">
+              <h4 className="text-2xl font-semibold text-sage-green mb-4 font-inter">Suggested Activities:</h4>
+              <ul className="list-disc list-inside text-gray-800 space-y-2">
+                {activityIdeas.map((idea, index) => (
+                  <li key={index} className="text-lg font-inter">{idea}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+};
+
+// Contact Us Page Component
+const ContactUsPage = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [submissionStatus, setSubmissionStatus] = useState(''); // To show success/error message
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmissionStatus('Sending message...');
+    // In a real application, you would send this data to a backend server
+    // or a service like Formspree, Netlify Forms, etc.
+    console.log({ name, email, message });
+    // Simulate API call
+    setTimeout(() => {
+      setSubmissionStatus('Message sent successfully! We will get back to you soon.');
+      setName('');
+      setEmail('');
+      setMessage('');
+    }, 1500);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-160px)] px-4 py-8 bg-off-white text-center">
+      <h2 className="text-4xl font-bold text-sage-green mb-8 font-inter">Get in Touch</h2>
+      <p className="text-xl text-gray-700 mb-4 font-inter">
+        We'd love to hear from you! Whether you have questions, want to volunteer, or wish to support our mission, feel free to reach out.
+      </p>
+      <div className="flex flex-col items-center space-y-4 mb-8">
+        <p className="text-lg text-gray-800 font-inter">
+          <span className="font-semibold">Email:</span>{' '}
+          <a href="mailto:radheyshantifoundation@gmail.com" className="text-dark-sage hover:underline">
+            radheyshantifoundation@gmail.com
+          </a>
+        </p>
+        <p className="text-lg text-gray-800 font-inter">
+          <span className="font-semibold">Phone:</span>{' '}
+          <a href="tel:+919643596029" className="text-dark-sage hover:underline">
+            +91-9643596029
+          </a>
+          ,{' '}
+          <a href="tel:+919711060355" className="text-dark-sage hover:underline">
+            +91-9711060355
+          </a>
+        </p>
+      </div>
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+        <h3 className="text-2xl font-semibold text-sage-green mb-6 font-inter">Send us a message</h3>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="name" className="block text-left text-gray-700 text-sm font-bold mb-2 font-inter">
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-inter"
+              placeholder="Your Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="email" className="block text-left text-gray-700 text-sm font-bold mb-2 font-inter">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-inter"
+              placeholder="Your Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="message" className="block text-left text-gray-700 text-sm font-bold mb-2 font-inter">
+              Message
+            </label>
+            <textarea
+              id="message"
+              rows="5"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-inter"
+              placeholder="Your Message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              required
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            className="bg-dark-sage hover:bg-sage-green text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 font-inter"
+          >
+            Send Message
+          </button>
+          {submissionStatus && (
+            <p className={`mt-4 text-center ${submissionStatus.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+              {submissionStatus}
+            </p>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+};
+
+
+// Main App Component
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+
+  // Function to render the current page based on state
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <HomePage />;
+      case 'about':
+        return <AboutUsPage />;
+      case 'work':
+        return <WorkPage />;
+      case 'contact':
+        return <ContactUsPage />;
+      default:
+        return <HomePage />;
+    }
+  };
+
+  return (
+    // Main container for the entire application, setting min-height and default font
+    <div className="min-h-screen flex flex-col font-inter">
+      {/* Header Section */}
+      <header className="bg-sage-green text-white p-4 shadow-md">
+        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
+          {/* Logo and NGO Name */}
+          <div className="flex items-center mb-4 md:mb-0">
+            {/* Logo provided by the user */}
+            <img
+              src="https://content-fetcher.web.app/uploaded:WhatsApp%20Image%202025-06-30%20at%2020.11.15_d008c3b5.jpg-38565135-4fd8-40b4-ad38-654d8fa1df57"
+              alt="Radhey Shanti Foundation Logo"
+              className="h-16 w-16 mr-3 object-contain rounded-full border-2 border-light-sage p-1" // Added rounded-full and border for style
+            />
+            <h1 className="text-3xl font-bold font-inter">Radhey Shanti Foundation</h1>
+            {/* Subtle leaf icon next to the name */}
+            <LeafIcon className="h-6 w-6 ml-2 text-light-sage" />
+          </div>
+
+          {/* Navigation Menu */}
+          <nav>
+            <ul className="flex flex-wrap justify-center space-x-6">
+              <li>
+                <button
+                  onClick={() => setCurrentPage('home')}
+                  className={`text-lg hover:text-light-sage transition duration-300 font-inter ${currentPage === 'home' ? 'font-bold underline' : ''}`}
+                >
+                  Home
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setCurrentPage('about')}
+                  className={`text-lg hover:text-light-sage transition duration-300 font-inter ${currentPage === 'about' ? 'font-bold underline' : ''}`}
+                >
+                  About Us
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setCurrentPage('work')}
+                  className={`text-lg hover:text-light-sage transition duration-300 font-inter ${currentPage === 'work' ? 'font-bold underline' : ''}`}
+                >
+                  Our Work
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setCurrentPage('contact')}
+                  className={`text-lg hover:text-light-sage transition duration-300 font-inter ${currentPage === 'contact' ? 'font-bold underline' : ''}`}
+                >
+                  Contact Us
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+
+      {/* Main Content Area - dynamically renders the current page */}
+      <main className="flex-grow">
+        {renderPage()}
+      </main>
+
+      {/* Footer Section */}
+      <footer className="bg-dark-sage text-white p-4 text-center shadow-inner">
+        <div className="container mx-auto font-inter">
+          <p>&copy; {new Date().getFullYear()} Radhey Shanti Foundation. All rights reserved.</p>
+          <p>Empowering lives, one purpose at a time.</p>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
